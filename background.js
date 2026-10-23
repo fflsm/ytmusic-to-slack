@@ -1,6 +1,15 @@
 // Service worker. Receives track reports from content.js and keeps the
 // Slack status in sync, without overwriting a status the user set by hand.
 
+// Defines SLACK_CLIENT_ID and SLACK_CLIENT_SECRET. See config.example.js.
+try {
+  importScripts('config.js');
+} catch (e) {
+  console.warn('config.js not found. Sign in with Slack is unavailable.');
+}
+
+const USER_SCOPES = 'users.profile:read,users.profile:write';
+
 const DEFAULTS = {
   token: '',
   emoji: ':headphones:',
@@ -45,6 +54,53 @@ async function slack(method, token, body) {
   const data = await res.json();
   if (!data.ok) throw new Error(`${method}: ${data.error || `HTTP ${res.status}`}`);
   return data;
+}
+
+// Runs Slack's OAuth flow and stores the signed-in person's own user token.
+async function signIn() {
+  if (typeof SLACK_CLIENT_ID === 'undefined' || typeof SLACK_CLIENT_SECRET === 'undefined') {
+    throw new Error('config.js is missing. Copy config.example.js to config.js and fill it in.');
+  }
+  const redirectUri = chrome.identity.getRedirectURL('slack');
+  const state = crypto.randomUUID();
+  const authUrl = 'https://slack.com/oauth/v2/authorize?' + new URLSearchParams({
+    client_id: SLACK_CLIENT_ID,
+    user_scope: USER_SCOPES,
+    redirect_uri: redirectUri,
+    state,
+  });
+
+  const result = new URL(await chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true }));
+  if (result.searchParams.get('error')) throw new Error(`Slack sign-in: ${result.searchParams.get('error')}`);
+  if (result.searchParams.get('state') !== state) throw new Error('Slack sign-in: state mismatch');
+
+  const res = await fetch('https://slack.com/api/oauth.v2.access', {
+    method: 'POST',
+    body: new URLSearchParams({
+      client_id: SLACK_CLIENT_ID,
+      client_secret: SLACK_CLIENT_SECRET,
+      code: result.searchParams.get('code'),
+      redirect_uri: redirectUri,
+    }),
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(`oauth.v2.access: ${data.error}`);
+
+  const token = data.authed_user?.access_token;
+  if (!token) throw new Error('oauth.v2.access: no user token returned');
+  await chrome.storage.local.set({ token, lastError: '' });
+  const who = await slack('auth.test', token);
+  return { user: who.user, team: who.team };
+}
+
+async function signOut() {
+  const { token } = await getSettings();
+  if (!token) return;
+  const state = await getState();
+  await clearStatus({ token }, state).catch(() => {});
+  await saveState(state);
+  await slack('auth.revoke', token).catch(() => {});
+  await chrome.storage.local.set({ token: '' });
 }
 
 async function currentStatusText(token) {
@@ -129,6 +185,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       .then((r) => sendResponse({ ok: true, user: r.user, team: r.team }))
       .catch((e) => sendResponse({ ok: false, error: e.message }));
     return true;
+  } else if (msg.type === 'signin') {
+    signIn()
+      .then((r) => sendResponse({ ok: true, ...r }))
+      .catch((e) => sendResponse({ ok: false, error: e.message }));
+    return true;
+  } else if (msg.type === 'signout') {
+    enqueue(signOut).then(() => sendResponse({ ok: true }));
+    return true;
+  } else if (msg.type === 'redirect') {
+    sendResponse({ url: chrome.identity.getRedirectURL('slack') });
   } else if (msg.type === 'clear') {
     enqueue(async () => {
       const state = await getState();

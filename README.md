@@ -10,23 +10,31 @@ A Chrome extension (Manifest V3) that sets your Slack status to the track you ar
 - When you pause, the status clears after a delay (30 seconds by default). It also clears when you close the YouTube Music tab.
 - It does not overwrite a status you set by hand (for example "In a meeting"). It clears a status only if the text is the one it set.
 
-## 1. Create a Slack app and get a user token
+## Sign-in
+
+Each person clicks **Sign in with Slack** on the settings page. The extension then gets that person's own user token. Never share a token: it acts as the person who approved it.
+
+The `key` in `manifest.json` pins the extension ID to `epolhkpcoojggdeighlaoipnlppndiob` on every install. Slack needs this, because it only sends people back to a redirect URL registered in advance. The matching private key is `ytmusic-slack-status.pem` in the parent folder. You need it only to pack a `.crx`. Do not put it inside this folder.
+
+## 1. Set up the Slack app (one time, by the owner)
 
 1. Go to https://api.slack.com/apps and click **Create New App** > **From scratch**. Select your workspace.
-2. Open **OAuth & Permissions**. Under **User Token Scopes**, add:
-   - `users.profile:read`
-   - `users.profile:write`
-3. Click **Install to Workspace** and approve. Some workspaces need an admin to approve the app.
-4. Copy the **User OAuth Token** (it starts with `xoxp-`).
+2. Open **OAuth & Permissions**.
+   - Under **Redirect URLs**, add `https://epolhkpcoojggdeighlaoipnlppndiob.chromiumapp.org/slack` and click **Save URLs**.
+   - Under **User Token Scopes**, add `users.profile:read` and `users.profile:write`.
+3. If your workspace needs admin approval for apps, request it now.
+4. Open **Basic Information**. Copy `config.example.js` to `config.js`, and paste in the **Client ID** and **Client Secret**.
 
-Keep this token secret. It can change your profile.
+`config.js` holds the client secret. Share the extension inside the organisation only, and do not commit `config.js` (it is in `.gitignore`).
 
-## 2. Load the extension
+## 2. Install the extension (each person)
 
-1. Open `chrome://extensions`.
-2. Turn on **Developer mode**.
-3. Click **Load unpacked** and select this folder.
-4. Click the extension icon to open the settings. Paste the token, click **Save**, then **Test token**.
+1. Get a copy of this folder, including `config.js`.
+2. Open `chrome://extensions` and turn on **Developer mode**.
+3. Click **Load unpacked** and select the folder.
+4. Click the extension icon, then click **Sign in with Slack** and approve.
+
+To push it to everyone without Developer mode, ask IT to install it through Chrome policy (Google Admin or Intune).
 
 ## 3. Use it
 
@@ -45,4 +53,6 @@ Play something on https://music.youtube.com. Your Slack status changes in a few 
 
 - Errors from Slack show at the bottom of the settings page.
 - For more detail, open `chrome://extensions` and click **service worker** on this extension to see its console.
-- `missing_scope`: add the two scopes above, then reinstall the app to get a new token.
+- `missing_scope`: add the two scopes above, then sign out and sign in again.
+- `bad_redirect_uri` or `redirect_uri_mismatch`: the redirect URL in the Slack app must match the one shown under **Advanced** on the settings page exactly.
+- `config.js is missing`: copy `config.example.js` to `config.js` and fill it in.

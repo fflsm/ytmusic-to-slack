@@ -1,7 +1,7 @@
 const DEFAULTS = {
   token: '',
   emoji: ':headphones:',
-  template: '{title} — {artist}',
+  template: 'Listening To: {title} — {artist}',
   enabled: true,
   clearDelaySec: 30,
   overwriteExisting: false,
@@ -18,7 +18,37 @@ async function load() {
     else el.value = s[key];
   }
   $('error').textContent = s.lastError ? `Last error: ${s.lastError}` : '';
+  await showAccount();
 }
+
+async function showAccount() {
+  const { token } = await chrome.storage.local.get('token');
+  $('token').value = token || '';
+  $('signout').hidden = !token;
+  if (!token) {
+    $('account').textContent = 'Not signed in.';
+    return;
+  }
+  const r = await chrome.runtime.sendMessage({ type: 'test' });
+  $('account').textContent = r.ok
+    ? `Signed in as ${r.user} in ${r.team}.`
+    : `Token does not work: ${r.error}. Sign in again.`;
+}
+
+$('signin').addEventListener('click', async () => {
+  msg('Signing in…');
+  const r = await chrome.runtime.sendMessage({ type: 'signin' });
+  msg(r.ok ? '' : `Sign-in failed: ${r.error}`);
+  await showAccount();
+});
+
+$('signout').addEventListener('click', async () => {
+  await chrome.runtime.sendMessage({ type: 'signout' });
+  msg('Signed out.');
+  await showAccount();
+});
+
+chrome.runtime.sendMessage({ type: 'redirect' }).then((r) => { $('redirect').textContent = r.url; });
 
 $('save').addEventListener('click', async () => {
   await chrome.storage.local.set({
@@ -32,12 +62,7 @@ $('save').addEventListener('click', async () => {
   });
   $('error').textContent = '';
   msg('Saved.');
-});
-
-$('test').addEventListener('click', async () => {
-  msg('Testing…');
-  const r = await chrome.runtime.sendMessage({ type: 'test' });
-  msg(r.ok ? `Connected as ${r.user} in ${r.team}.` : `Failed: ${r.error}`);
+  await showAccount();
 });
 
 $('clear').addEventListener('click', async () => {

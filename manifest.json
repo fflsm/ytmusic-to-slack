@@ -3,7 +3,8 @@
   "name": "YouTube Music to Slack Status",
   "version": "1.0.0",
   "description": "Sets your Slack status to the track you are playing on YouTube Music.",
-  "permissions": ["storage"],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0/rghdq2qFxmVloqiGb/7k72Ndq6XnMWB8O2Y6nqk6el/gRCL9Q5x6E+3JhW5ovg4c9zzo6tKaqRPSXNGvwF1RR9BCTwhlx1/wlPm70bRLv73aDSRKbGVxOO/HQbB5XB0t93nileIOmTD0DRk4s4lsFZbpGAuX+yRqVQBiA4Q2VcRUsHN2YVnB2cy9lM/XYdf6BI/IljlKPEo34H/dcuzQw37X3TvkwKEEkNeO0rvGz/dX3zEk9fmnoOsfSIUtlK3L1e2xjH/8nxCMylCOsEeeHDB9oj0dRHGgBKOj/f4VrQuKGgOllV34yGi6sNjkW8mW3AbGN5tnQ/2Ukpk4rICwIDAQAB",
+  "permissions": ["storage", "identity"],
   "host_permissions": ["https://slack.com/api/*"],
   "background": {
     "service_worker": "background.js"

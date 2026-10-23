@@ -17,9 +17,17 @@
 <body>
   <h2>YouTube Music to Slack Status</h2>
 
-  <label for="token">Slack user token</label>
-  <input id="token" type="password" placeholder="xoxp-…" autocomplete="off">
-  <small>Needs the <code>users.profile:read</code> and <code>users.profile:write</code> user scopes.</small>
+  <p id="account">Not signed in.</p>
+  <button id="signin">Sign in with Slack</button>
+  <button id="signout">Sign out</button>
+
+  <details>
+    <summary>Advanced: paste a token by hand</summary>
+    <label for="token">Slack user token</label>
+    <input id="token" type="password" placeholder="xoxp-…" autocomplete="off">
+    <small>Needs the <code>users.profile:read</code> and <code>users.profile:write</code> user scopes.</small>
+    <p><small>Slack redirect URL for this extension: <code id="redirect"></code></small></p>
+  </details>
 
   <label for="template">Status text</label>
   <input id="template" type="text">
@@ -35,7 +43,6 @@
   <label class="inline"><input id="overwriteExisting" type="checkbox"> Overwrite a status I set by hand</label>
 
   <button id="save">Save</button>
-  <button id="test">Test token</button>
   <button id="clear">Clear status now</button>
 
   <div id="msg"></div>
