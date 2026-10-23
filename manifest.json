@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Music to Slack Status",
+  "version": "1.0.0",
+  "description": "Sets your Slack status to the track you are playing on YouTube Music.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://slack.com/api/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://music.youtube.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "options_page": "options.html",
+  "action": {
+    "default_title": "YouTube Music to Slack Status"
+  }
+}

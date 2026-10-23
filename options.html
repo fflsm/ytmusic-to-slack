@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>YouTube Music to Slack Status</title>
+  <style>
+    body { font: 14px system-ui, sans-serif; max-width: 520px; margin: 24px auto; padding: 0 16px; }
+    label { display: block; margin: 14px 0 4px; font-weight: 600; }
+    label.inline { font-weight: normal; }
+    input[type=text], input[type=password], input[type=number] { width: 100%; box-sizing: border-box; padding: 6px; }
+    small { color: #666; }
+    button { margin: 18px 8px 0 0; padding: 6px 14px; }
+    #msg { margin-top: 12px; }
+    #error { color: #b00020; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>YouTube Music to Slack Status</h2>
+
+  <label for="token">Slack user token</label>
+  <input id="token" type="password" placeholder="xoxp-…" autocomplete="off">
+  <small>Needs the <code>users.profile:read</code> and <code>users.profile:write</code> user scopes.</small>
+
+  <label for="template">Status text</label>
+  <input id="template" type="text">
+  <small>Use <code>{title}</code> and <code>{artist}</code>. Slack cuts the text at 100 characters.</small>
+
+  <label for="emoji">Status emoji</label>
+  <input id="emoji" type="text">
+
+  <label for="clearDelaySec">Clear the status after a pause of (seconds)</label>
+  <input id="clearDelaySec" type="number" min="0">
+
+  <label class="inline"><input id="enabled" type="checkbox"> Enabled</label>
+  <label class="inline"><input id="overwriteExisting" type="checkbox"> Overwrite a status I set by hand</label>
+
+  <button id="save">Save</button>
+  <button id="test">Test token</button>
+  <button id="clear">Clear status now</button>
+
+  <div id="msg"></div>
+  <p id="error"></p>
+
+  <script src="options.js"></script>
+</body>
+</html>
